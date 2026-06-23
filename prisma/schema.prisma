@@ -1,0 +1,471 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  OWNER
+  ADMIN
+  MANAGER
+  CONTENT_CREATOR
+  APPROVER
+  ANALYST
+  CLIENT_VIEWER
+}
+
+enum CampaignStatus {
+  DRAFT
+  ACTIVE
+  PAUSED
+  COMPLETED
+  ARCHIVED
+}
+
+enum ContentStatus {
+  DRAFT
+  AI_GENERATED
+  HUMAN_EDITED
+  PENDING_APPROVAL
+  APPROVED
+  SCHEDULED
+  PUBLISHED
+  REJECTED
+}
+
+enum ApprovalStatus {
+  PENDING
+  APPROVED
+  REJECTED
+  CHANGES_REQUESTED
+}
+
+enum TaskStatus {
+  TODO
+  IN_PROGRESS
+  BLOCKED
+  DONE
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  URGENT
+}
+
+enum IntegrationProvider {
+  GMAIL
+  FACEBOOK_PAGES
+  INSTAGRAM
+  META_ADS
+  LINKEDIN
+  X_TWITTER
+  WHATSAPP_BUSINESS
+  YOUTUBE
+  WEBSITE_BLOG
+  CUSTOM_WEBHOOK
+}
+
+enum InboxType {
+  EMAIL
+  COMMENT
+  DM
+  MENTION
+  REVIEW
+  REPLY
+}
+
+enum AuditAction {
+  USER_LOGIN
+  INTEGRATION_CONNECTED
+  INTEGRATION_DISCONNECTED
+  INTEGRATION_EVENT
+  AI_CONTENT_GENERATED
+  CONTENT_EDITED
+  APPROVAL_REQUESTED
+  APPROVED
+  REJECTED
+  CHANGES_REQUESTED
+  SCHEDULED
+  PUBLISHED
+  FAILED_PUBLISH
+  EMAIL_SENT
+  SOCIAL_REPLY_SENT
+}
+
+model Tenant {
+  id                String             @id @default(cuid())
+  name              String
+  slug              String             @unique
+  plan              String             @default("starter")
+  settings          Json               @default("{}")
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  memberships       Membership[]
+  clients           Client[]
+  campaigns         Campaign[]
+  channelAccounts   ChannelAccount[]
+  contentItems      ContentItem[]
+  approvalRequests  ApprovalRequest[]
+  scheduledPosts    ScheduledPost[]
+  publishedPosts    PublishedPost[]
+  inboxItems        InboxItem[]
+  templates         Template[]
+  tasks             Task[]
+  agentConfigs      AgentConfig[]
+  integrationEvents IntegrationEvent[]
+  auditLogs         AuditLog[]
+}
+
+model User {
+  id              String            @id @default(cuid())
+  name            String?
+  email           String            @unique
+  emailVerified   DateTime?
+  image           String?
+  passwordHash    String?
+  createdAt       DateTime          @default(now())
+  updatedAt       DateTime          @updatedAt
+  memberships     Membership[]
+  accounts        Account[]
+  sessions        Session[]
+  assignedTasks   Task[]            @relation("TaskAssignee")
+  createdContent  ContentItem[]     @relation("ContentCreator")
+  approvals       ApprovalRequest[] @relation("ApprovalRequester")
+  approvalReviews ApprovalRequest[] @relation("ApprovalReviewer")
+  auditLogs       AuditLog[]
+}
+
+model Membership {
+  id        String   @id @default(cuid())
+  tenantId  String
+  userId    String
+  role      Role
+  invitedBy String?
+  createdAt DateTime @default(now())
+  tenant    Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, userId])
+  @@index([tenantId, role])
+}
+
+model Client {
+  id                     String     @id @default(cuid())
+  tenantId               String
+  name                   String
+  company                String
+  contactPerson          String
+  email                  String
+  phone                  String?
+  industry               String?
+  notes                  String?
+  connectedSocialAccounts Json      @default("[]")
+  createdAt              DateTime   @default(now())
+  updatedAt              DateTime   @updatedAt
+  tenant                 Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  campaigns              Campaign[]
+  tasks                  Task[]
+
+  @@index([tenantId])
+}
+
+model Campaign {
+  id             String          @id @default(cuid())
+  tenantId       String
+  clientId       String?
+  name           String
+  objective      String
+  targetAudience String
+  platforms      Json            @default("[]")
+  budget         Decimal?        @db.Decimal(12, 2)
+  startDate      DateTime?
+  endDate        DateTime?
+  status         CampaignStatus  @default(DRAFT)
+  assignedUsers  Json            @default("[]")
+  brandVoice     String?
+  keywords       Json            @default("[]")
+  hashtags       Json            @default("[]")
+  assets         Json            @default("[]")
+  createdAt      DateTime        @default(now())
+  updatedAt      DateTime        @updatedAt
+  tenant         Tenant          @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  client         Client?         @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  contentItems   ContentItem[]
+  scheduledPosts ScheduledPost[]
+  tasks          Task[]
+
+  @@index([tenantId, status])
+}
+
+model ChannelAccount {
+  id               String              @id @default(cuid())
+  tenantId         String
+  provider         IntegrationProvider
+  accountName      String
+  externalAccountId String?
+  status           String              @default("connected")
+  permissions      Json                @default("[]")
+  credentialsRef   String?
+  lastSyncedAt     DateTime?
+  createdAt        DateTime            @default(now())
+  updatedAt        DateTime            @updatedAt
+  tenant           Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, provider])
+}
+
+model ContentItem {
+  id                String             @id @default(cuid())
+  tenantId          String
+  campaignId        String?
+  createdById       String?
+  title             String
+  contentType       String
+  channels          Json               @default("[]")
+  body              String
+  prompt            String?
+  tone              String?
+  status            ContentStatus      @default(DRAFT)
+  aiMetadata        Json               @default("{}")
+  brandVoiceScore   Int?
+  characterLimits   Json               @default("{}")
+  scheduledAt       DateTime?
+  createdAt         DateTime           @default(now())
+  updatedAt         DateTime           @updatedAt
+  tenant            Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  campaign          Campaign?          @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  createdBy         User?              @relation("ContentCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  versions          ContentVersion[]
+  approvalRequests  ApprovalRequest[]
+  scheduledPosts    ScheduledPost[]
+  publishedPosts    PublishedPost[]
+  tasks             Task[]
+
+  @@index([tenantId, status])
+}
+
+model ContentVersion {
+  id            String      @id @default(cuid())
+  tenantId      String
+  contentItemId String
+  version       Int
+  body          String
+  editedById    String?
+  changeSummary String?
+  createdAt     DateTime    @default(now())
+  contentItem   ContentItem @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+
+  @@unique([contentItemId, version])
+  @@index([tenantId])
+}
+
+model ApprovalRequest {
+  id            String            @id @default(cuid())
+  tenantId      String
+  contentItemId String
+  requestedById String?
+  approverId    String?
+  status        ApprovalStatus    @default(PENDING)
+  reason        String?
+  requestedAt   DateTime          @default(now())
+  reviewedAt    DateTime?
+  tenant        Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contentItem   ContentItem       @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+  requestedBy   User?             @relation("ApprovalRequester", fields: [requestedById], references: [id], onDelete: SetNull)
+  approver      User?             @relation("ApprovalReviewer", fields: [approverId], references: [id], onDelete: SetNull)
+  comments      ApprovalComment[]
+
+  @@index([tenantId, status])
+}
+
+model ApprovalComment {
+  id                String          @id @default(cuid())
+  tenantId          String
+  approvalRequestId String
+  userId            String?
+  body              String
+  createdAt         DateTime        @default(now())
+  approvalRequest   ApprovalRequest @relation(fields: [approvalRequestId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId])
+}
+
+model ScheduledPost {
+  id             String      @id @default(cuid())
+  tenantId       String
+  campaignId     String?
+  contentItemId  String
+  provider       IntegrationProvider
+  payload        Json
+  scheduledAt    DateTime
+  status         String      @default("queued")
+  attempts       Int         @default(0)
+  lastError      String?
+  createdAt      DateTime    @default(now())
+  updatedAt      DateTime    @updatedAt
+  tenant         Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  campaign       Campaign?   @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  contentItem    ContentItem @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, scheduledAt])
+}
+
+model PublishedPost {
+  id               String      @id @default(cuid())
+  tenantId         String
+  contentItemId    String
+  provider         IntegrationProvider
+  externalPostId   String?
+  platformResponse Json        @default("{}")
+  publishedAt      DateTime    @default(now())
+  tenant           Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contentItem      ContentItem @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, publishedAt])
+}
+
+model InboxItem {
+  id             String              @id @default(cuid())
+  tenantId       String
+  provider       IntegrationProvider
+  type           InboxType
+  externalId     String?
+  senderName     String
+  senderHandle   String?
+  subject        String?
+  body           String
+  sentiment      String?
+  urgency        String?
+  assignedUserId String?
+  isUnread       Boolean             @default(true)
+  aiSummary      String?
+  suggestedReply String?
+  receivedAt     DateTime            @default(now())
+  tenant         Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, provider, isUnread])
+}
+
+model Template {
+  id          String   @id @default(cuid())
+  tenantId    String
+  name        String
+  type        String
+  body        String
+  tags        Json     @default("[]")
+  createdById String?
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+  tenant      Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, type])
+}
+
+model Task {
+  id            String      @id @default(cuid())
+  tenantId      String
+  campaignId    String?
+  contentItemId String?
+  clientId      String?
+  assignedUserId String?
+  title         String
+  description   String?
+  dueDate       DateTime?
+  priority      Priority    @default(MEDIUM)
+  status        TaskStatus  @default(TODO)
+  createdAt     DateTime    @default(now())
+  updatedAt     DateTime    @updatedAt
+  tenant        Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  campaign      Campaign?   @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  contentItem   ContentItem? @relation(fields: [contentItemId], references: [id], onDelete: SetNull)
+  client        Client?     @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  assignedUser  User?       @relation("TaskAssignee", fields: [assignedUserId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, status])
+}
+
+model AgentConfig {
+  id               String   @id @default(cuid())
+  tenantId         String
+  agentType        String
+  enabled          Boolean  @default(true)
+  provider         String   @default("paperclip")
+  endpoint         String?
+  modelName        String?
+  temperature      Decimal  @default(0.7) @db.Decimal(3, 2)
+  maxTokens        Int      @default(1200)
+  approvalRequired Boolean  @default(true)
+  settings         Json     @default("{}")
+  updatedAt        DateTime @updatedAt
+  tenant           Tenant   @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@unique([tenantId, agentType])
+}
+
+model IntegrationEvent {
+  id         String              @id @default(cuid())
+  tenantId   String
+  provider   IntegrationProvider
+  eventType  String
+  payload    Json
+  status     String              @default("received")
+  createdAt  DateTime            @default(now())
+  tenant     Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+
+  @@index([tenantId, provider, createdAt])
+}
+
+model AuditLog {
+  id         String      @id @default(cuid())
+  tenantId   String
+  userId     String?
+  action     AuditAction
+  entityType String
+  entityId   String?
+  metadata   Json        @default("{}")
+  ipAddress  String?
+  createdAt  DateTime    @default(now())
+  tenant     Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  user       User?       @relation(fields: [userId], references: [id], onDelete: SetNull)
+
+  @@index([tenantId, action, createdAt])
+}
+
+model Account {
+  id                String  @id @default(cuid())
+  userId            String
+  type              String
+  provider          String
+  providerAccountId String
+  refresh_token     String?
+  access_token      String?
+  expires_at        Int?
+  token_type        String?
+  scope             String?
+  id_token          String?
+  session_state     String?
+  user              User    @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([provider, providerAccountId])
+}
+
+model Session {
+  id           String   @id @default(cuid())
+  sessionToken String   @unique
+  userId       String
+  expires      DateTime
+  user         User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+}
+
+model VerificationToken {
+  identifier String
+  token      String   @unique
+  expires    DateTime
+
+  @@unique([identifier, token])
+}

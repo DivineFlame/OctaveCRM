@@ -1,0 +1,45 @@
+services:
+  app:
+    build: .
+    container_name: octavecrm-app
+    ports:
+      - "3003:3003"
+    environment:
+      DATABASE_URL: postgresql://octavecrm:octavecrm@postgres:5432/octavecrm
+      REDIS_URL: redis://redis:6379
+      NEXTAUTH_URL: http://localhost:3003
+      NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change-me-in-production}
+      PAPERCLIP_ENDPOINT: ${PAPERCLIP_ENDPOINT:-http://paperclip:8080}
+      LOCAL_LLM_ENDPOINT: ${LOCAL_LLM_ENDPOINT:-http://host.docker.internal:11434}
+      COMPOSIO_API_KEY: ${COMPOSIO_API_KEY:-}
+      STORAGE_DRIVER: local
+      STORAGE_LOCAL_PATH: /app/storage
+    volumes:
+      - ./storage:/app/storage
+    depends_on:
+      - postgres
+      - redis
+    restart: unless-stopped
+
+  postgres:
+    image: postgres:16-alpine
+    container_name: octavecrm-postgres
+    environment:
+      POSTGRES_USER: octavecrm
+      POSTGRES_PASSWORD: octavecrm
+      POSTGRES_DB: octavecrm
+    volumes:
+      - postgres-data:/var/lib/postgresql/data
+    ports:
+      - "5432:5432"
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: octavecrm-redis
+    ports:
+      - "6379:6379"
+    restart: unless-stopped
+
+volumes:
+  postgres-data:
