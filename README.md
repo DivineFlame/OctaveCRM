@@ -11,7 +11,6 @@ OctaveCRM is a production-oriented SaaS scaffold for digital media marketing man
 - Mock Paperclip AI agent adapter
 - Mock Composio.dev integration adapter
 - Docker and Docker Compose
-- Optional local AI stack: Ollama, Open WebUI, Hermes Agent, and Paperclip
 
 ## Safety Rules Implemented
 
@@ -53,13 +52,6 @@ The Compose file publishes the app on port `3003` and defaults `NEXTAUTH_URL` to
 http://38.247.188.228:3003
 ```
 
-The Compose stack also publishes the local AI services:
-
-- Open WebUI: http://localhost:3001
-- Ollama API: http://localhost:11434
-- Hermes Agent API: http://localhost:8642
-- Paperclip: http://localhost:3100
-
 After the database is healthy, run migrations/seeding inside the app container:
 
 ```bash
@@ -74,9 +66,8 @@ The app container also runs those two commands automatically on startup. The see
 - `DATABASE_URL` - PostgreSQL connection string
 - `REDIS_URL` - Redis connection for BullMQ
 - `NEXTAUTH_SECRET` - long random secret
-- `PAPERCLIP_ENDPOINT` - Paperclip agent endpoint
-- `LOCAL_LLM_ENDPOINT` - optional local LLM endpoint
-- `HERMES_API_KEY` - API key for the local Hermes Agent service
+- `PAPERCLIP_ENDPOINT` - external Paperclip agent endpoint when connected
+- `LOCAL_LLM_ENDPOINT` - optional external local LLM endpoint
 - `COMPOSIO_API_KEY` - Composio API key for real integration work
 - `STORAGE_DRIVER` - `local` now, S3-compatible later
 
