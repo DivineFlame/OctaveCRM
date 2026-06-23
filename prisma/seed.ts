@@ -5,6 +5,23 @@ import { paperclipAgentTypes } from "../lib/types/domain";
 const prisma = new PrismaClient();
 
 async function main() {
+  const existingTenant = await prisma.tenant.findUnique({
+    where: { slug: "demo-agency" },
+    include: {
+      _count: {
+        select: {
+          campaigns: true,
+          memberships: true
+        }
+      }
+    }
+  });
+
+  if (existingTenant?._count.campaigns && existingTenant._count.memberships) {
+    console.log(`Seed skipped; tenant ${existingTenant.name} already has demo data.`);
+    return;
+  }
+
   const passwordHash = await bcrypt.hash("OctaveDemo123!", 10);
 
   const tenant = await prisma.tenant.upsert({
