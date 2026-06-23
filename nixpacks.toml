@@ -1,6 +1,8 @@
 [variables]
 NODE_VERSION = "20.19.0"
 NPM_CONFIG_PRODUCTION = "false"
+PORT = "3003"
+HOSTNAME = "0.0.0.0"
 
 [phases.setup]
 nixPkgs = ["nodejs_20", "npm-10_x"]
@@ -12,4 +14,4 @@ cmds = ["npm ci"]
 cmds = ["npm run build"]
 
 [start]
-cmd = "npx prisma db push && npm run seed && npm run start"
+cmd = "npx prisma db push && npm run seed && next start -H 0.0.0.0 -p ${PORT:-3003}"
