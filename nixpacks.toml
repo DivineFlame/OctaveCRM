@@ -1,7 +1,7 @@
 [variables]
 NODE_VERSION = "20.19.0"
 NPM_CONFIG_PRODUCTION = "false"
-PORT = "3003"
+PORT = "3002"
 HOSTNAME = "0.0.0.0"
 
 [phases.setup]
@@ -14,4 +14,4 @@ cmds = ["npm ci"]
 cmds = ["npm run build"]
 
 [start]
-cmd = "npx prisma db push && npm run seed && next start -H 0.0.0.0 -p ${PORT:-3003}"
+cmd = "npx prisma db push && npm run seed && next start -H 0.0.0.0 -p ${PORT:-3002}"

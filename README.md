@@ -33,7 +33,7 @@ npm run seed
 npm run dev
 ```
 
-Open http://localhost:3003 locally, or http://38.247.188.228:3003 on the configured server.
+Open http://localhost:3002 locally, or http://38.247.188.228:3002 on the configured server.
 
 Demo login:
 
@@ -46,10 +46,10 @@ Demo login:
 docker compose up --build
 ```
 
-The Compose file publishes the app on port `3003` and defaults `NEXTAUTH_URL` to:
+The Compose file publishes the app on port `3002` and defaults `NEXTAUTH_URL` to:
 
 ```bash
-http://38.247.188.228:3003
+http://38.247.188.228:3002
 ```
 
 The app defaults `PAPERCLIP_ENDPOINT` to:

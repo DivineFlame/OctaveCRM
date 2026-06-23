@@ -7,9 +7,9 @@
     "npm": ">=10"
   },
   "scripts": {
-    "dev": "next dev -p 3003",
+    "dev": "next dev -p 3002",
     "build": "prisma generate && next build",
-    "start": "next start -H 0.0.0.0 -p ${PORT:-3003}",
+    "start": "next start -H 0.0.0.0 -p ${PORT:-3002}",
     "lint": "next lint",
     "prisma:generate": "prisma generate",
     "prisma:migrate": "prisma migrate dev",

@@ -3,13 +3,13 @@ services:
     build: .
     container_name: octavecrm-app
     ports:
-      - "3003:3003"
+      - "3002:3002"
     environment:
       DATABASE_URL: postgresql://octavecrm:octavecrm@postgres:5432/octavecrm
       REDIS_URL: redis://redis:6379
-      PORT: 3003
+      PORT: 3002
       HOSTNAME: 0.0.0.0
-      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://38.247.188.228:3003}
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://38.247.188.228:3002}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change-me-in-production}
       PAPERCLIP_ENDPOINT: ${PAPERCLIP_ENDPOINT:-http://38.247.188.228:3100}
       LOCAL_LLM_ENDPOINT: ${LOCAL_LLM_ENDPOINT:-http://host.docker.internal:11434}
