@@ -33,7 +33,7 @@ npm run seed
 npm run dev
 ```
 
-Open http://localhost:3003.
+Open http://localhost:3003 locally, or http://38.247.188.228:3003 on the configured server.
 
 Demo login:
 
@@ -44,6 +44,12 @@ Demo login:
 
 ```bash
 docker compose up --build
+```
+
+The Compose file publishes the app on port `3003` and defaults `NEXTAUTH_URL` to:
+
+```bash
+http://38.247.188.228:3003
 ```
 
 After the database is healthy, run migrations/seeding inside the app container:

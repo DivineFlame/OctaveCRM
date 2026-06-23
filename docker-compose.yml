@@ -7,7 +7,7 @@ services:
     environment:
       DATABASE_URL: postgresql://octavecrm:octavecrm@postgres:5432/octavecrm
       REDIS_URL: redis://redis:6379
-      NEXTAUTH_URL: http://localhost:3003
+      NEXTAUTH_URL: ${NEXTAUTH_URL:-http://38.247.188.228:3003}
       NEXTAUTH_SECRET: ${NEXTAUTH_SECRET:-change-me-in-production}
       PAPERCLIP_ENDPOINT: ${PAPERCLIP_ENDPOINT:-http://paperclip:8080}
       LOCAL_LLM_ENDPOINT: ${LOCAL_LLM_ENDPOINT:-http://host.docker.internal:11434}
