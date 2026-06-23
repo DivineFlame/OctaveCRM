@@ -52,6 +52,14 @@ The Compose file publishes the app on port `3003` and defaults `NEXTAUTH_URL` to
 http://38.247.188.228:3003
 ```
 
+The app defaults `PAPERCLIP_ENDPOINT` to:
+
+```bash
+http://38.247.188.228:3100
+```
+
+Set `COMPOSIO_API_KEY` in Dokploy environment variables. Do not commit real API keys to the repository.
+
 After the database is healthy, run migrations/seeding inside the app container:
 
 ```bash
