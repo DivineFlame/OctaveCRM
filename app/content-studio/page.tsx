@@ -14,7 +14,7 @@ export default async function ContentStudioPage() {
 
   return (
     <>
-      <PageHeader title="Content Studio" description="Generate, edit, preview, and send content for approval. AI cannot publish directly." actionLabel="Save Draft" />
+      <PageHeader title="Content Studio" description="Generate source-grounded drafts from company profile and website data, then review and approve. AI cannot publish directly." actionLabel="Save Draft" />
       <div className="grid gap-5 xl:grid-cols-[1.1fr_0.9fr]">
         <Card>
           <CardHeader>
@@ -30,6 +30,9 @@ export default async function ContentStudioPage() {
               <Input placeholder="Type: carousel, email, ad copy" />
             </div>
             <Textarea placeholder="Enter topic, campaign idea, or content prompt..." />
+            <p className="text-xs text-muted-foreground">
+              Prompts define the task only. Company facts and claims are taken exclusively from the workspace or selected client profile and website reference.
+            </p>
             <div className="flex flex-wrap gap-2">
               {["shorter", "longer", "professional", "casual", "persuasive", "Hindi", "Hinglish"].map((option) => (
                 <Button key={option} variant="secondary" size="sm">{option}</Button>

@@ -102,6 +102,9 @@ model Tenant {
   name              String
   slug              String             @unique
   plan              String             @default("starter")
+  companyProfile    String?
+  websiteUrl        String?
+  websiteReference  String?
   settings          Json               @default("{}")
   createdAt         DateTime           @default(now())
   updatedAt         DateTime           @updatedAt
@@ -155,21 +158,24 @@ model Membership {
 }
 
 model Client {
-  id                     String     @id @default(cuid())
-  tenantId               String
-  name                   String
-  company                String
-  contactPerson          String
-  email                  String
-  phone                  String?
-  industry               String?
-  notes                  String?
-  connectedSocialAccounts Json      @default("[]")
-  createdAt              DateTime   @default(now())
-  updatedAt              DateTime   @updatedAt
-  tenant                 Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  campaigns              Campaign[]
-  tasks                  Task[]
+  id                      String     @id @default(cuid())
+  tenantId                String
+  name                    String
+  company                 String
+  contactPerson           String
+  email                   String
+  phone                   String?
+  industry                String?
+  notes                   String?
+  companyProfile          String?
+  websiteUrl              String?
+  websiteReference        String?
+  connectedSocialAccounts Json       @default("[]")
+  createdAt               DateTime   @default(now())
+  updatedAt               DateTime   @updatedAt
+  tenant                  Tenant     @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  campaigns               Campaign[]
+  tasks                   Task[]
 
   @@index([tenantId])
 }
@@ -203,48 +209,48 @@ model Campaign {
 }
 
 model ChannelAccount {
-  id               String              @id @default(cuid())
-  tenantId         String
-  provider         IntegrationProvider
-  accountName      String
+  id                String              @id @default(cuid())
+  tenantId          String
+  provider          IntegrationProvider
+  accountName       String
   externalAccountId String?
-  status           String              @default("connected")
-  permissions      Json                @default("[]")
-  credentialsRef   String?
-  lastSyncedAt     DateTime?
-  createdAt        DateTime            @default(now())
-  updatedAt        DateTime            @updatedAt
-  tenant           Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  status            String              @default("connected")
+  permissions       Json                @default("[]")
+  credentialsRef    String?
+  lastSyncedAt      DateTime?
+  createdAt         DateTime            @default(now())
+  updatedAt         DateTime            @updatedAt
+  tenant            Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, provider])
 }
 
 model ContentItem {
-  id                String             @id @default(cuid())
-  tenantId          String
-  campaignId        String?
-  createdById       String?
-  title             String
-  contentType       String
-  channels          Json               @default("[]")
-  body              String
-  prompt            String?
-  tone              String?
-  status            ContentStatus      @default(DRAFT)
-  aiMetadata        Json               @default("{}")
-  brandVoiceScore   Int?
-  characterLimits   Json               @default("{}")
-  scheduledAt       DateTime?
-  createdAt         DateTime           @default(now())
-  updatedAt         DateTime           @updatedAt
-  tenant            Tenant             @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  campaign          Campaign?          @relation(fields: [campaignId], references: [id], onDelete: SetNull)
-  createdBy         User?              @relation("ContentCreator", fields: [createdById], references: [id], onDelete: SetNull)
-  versions          ContentVersion[]
-  approvalRequests  ApprovalRequest[]
-  scheduledPosts    ScheduledPost[]
-  publishedPosts    PublishedPost[]
-  tasks             Task[]
+  id               String            @id @default(cuid())
+  tenantId         String
+  campaignId       String?
+  createdById      String?
+  title            String
+  contentType      String
+  channels         Json              @default("[]")
+  body             String
+  prompt           String?
+  tone             String?
+  status           ContentStatus     @default(DRAFT)
+  aiMetadata       Json              @default("{}")
+  brandVoiceScore  Int?
+  characterLimits  Json              @default("{}")
+  scheduledAt      DateTime?
+  createdAt        DateTime          @default(now())
+  updatedAt        DateTime          @updatedAt
+  tenant           Tenant            @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  campaign         Campaign?         @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  createdBy        User?             @relation("ContentCreator", fields: [createdById], references: [id], onDelete: SetNull)
+  versions         ContentVersion[]
+  approvalRequests ApprovalRequest[]
+  scheduledPosts   ScheduledPost[]
+  publishedPosts   PublishedPost[]
+  tasks            Task[]
 
   @@index([tenantId, status])
 }
@@ -296,35 +302,35 @@ model ApprovalComment {
 }
 
 model ScheduledPost {
-  id             String      @id @default(cuid())
-  tenantId       String
-  campaignId     String?
-  contentItemId  String
-  provider       IntegrationProvider
-  payload        Json
-  scheduledAt    DateTime
-  status         String      @default("queued")
-  attempts       Int         @default(0)
-  lastError      String?
-  createdAt      DateTime    @default(now())
-  updatedAt      DateTime    @updatedAt
-  tenant         Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  campaign       Campaign?   @relation(fields: [campaignId], references: [id], onDelete: SetNull)
-  contentItem    ContentItem @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+  id            String              @id @default(cuid())
+  tenantId      String
+  campaignId    String?
+  contentItemId String
+  provider      IntegrationProvider
+  payload       Json
+  scheduledAt   DateTime
+  status        String              @default("queued")
+  attempts      Int                 @default(0)
+  lastError     String?
+  createdAt     DateTime            @default(now())
+  updatedAt     DateTime            @updatedAt
+  tenant        Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  campaign      Campaign?           @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  contentItem   ContentItem         @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, scheduledAt])
 }
 
 model PublishedPost {
-  id               String      @id @default(cuid())
+  id               String              @id @default(cuid())
   tenantId         String
   contentItemId    String
   provider         IntegrationProvider
   externalPostId   String?
-  platformResponse Json        @default("{}")
-  publishedAt      DateTime    @default(now())
-  tenant           Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  contentItem      ContentItem @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
+  platformResponse Json                @default("{}")
+  publishedAt      DateTime            @default(now())
+  tenant           Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  contentItem      ContentItem         @relation(fields: [contentItemId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, publishedAt])
 }
@@ -367,24 +373,24 @@ model Template {
 }
 
 model Task {
-  id            String      @id @default(cuid())
-  tenantId      String
-  campaignId    String?
-  contentItemId String?
-  clientId      String?
+  id             String       @id @default(cuid())
+  tenantId       String
+  campaignId     String?
+  contentItemId  String?
+  clientId       String?
   assignedUserId String?
-  title         String
-  description   String?
-  dueDate       DateTime?
-  priority      Priority    @default(MEDIUM)
-  status        TaskStatus  @default(TODO)
-  createdAt     DateTime    @default(now())
-  updatedAt     DateTime    @updatedAt
-  tenant        Tenant      @relation(fields: [tenantId], references: [id], onDelete: Cascade)
-  campaign      Campaign?   @relation(fields: [campaignId], references: [id], onDelete: SetNull)
-  contentItem   ContentItem? @relation(fields: [contentItemId], references: [id], onDelete: SetNull)
-  client        Client?     @relation(fields: [clientId], references: [id], onDelete: SetNull)
-  assignedUser  User?       @relation("TaskAssignee", fields: [assignedUserId], references: [id], onDelete: SetNull)
+  title          String
+  description    String?
+  dueDate        DateTime?
+  priority       Priority     @default(MEDIUM)
+  status         TaskStatus   @default(TODO)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  tenant         Tenant       @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  campaign       Campaign?    @relation(fields: [campaignId], references: [id], onDelete: SetNull)
+  contentItem    ContentItem? @relation(fields: [contentItemId], references: [id], onDelete: SetNull)
+  client         Client?      @relation(fields: [clientId], references: [id], onDelete: SetNull)
+  assignedUser   User?        @relation("TaskAssignee", fields: [assignedUserId], references: [id], onDelete: SetNull)
 
   @@index([tenantId, status])
 }
@@ -408,14 +414,14 @@ model AgentConfig {
 }
 
 model IntegrationEvent {
-  id         String              @id @default(cuid())
-  tenantId   String
-  provider   IntegrationProvider
-  eventType  String
-  payload    Json
-  status     String              @default("received")
-  createdAt  DateTime            @default(now())
-  tenant     Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
+  id        String              @id @default(cuid())
+  tenantId  String
+  provider  IntegrationProvider
+  eventType String
+  payload   Json
+  status    String              @default("received")
+  createdAt DateTime            @default(now())
+  tenant    Tenant              @relation(fields: [tenantId], references: [id], onDelete: Cascade)
 
   @@index([tenantId, provider, createdAt])
 }

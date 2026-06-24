@@ -1,5 +1,10 @@
 import { prisma } from "@/lib/prisma";
 import { writeAuditLog } from "@/lib/services/audit";
+import {
+  buildGroundedAgentPrompt,
+  type AiUseCase,
+  type AuthoritativeAiSource
+} from "@/lib/services/ai-source-context";
 import type { PaperclipAgentType } from "@/lib/types/domain";
 
 export type GenerateContentInput = {
@@ -13,6 +18,8 @@ export type GenerateContentInput = {
   contentType: string;
   brandVoice?: string;
   prompt?: string;
+  useCase: AiUseCase;
+  source: AuthoritativeAiSource;
 };
 
 export type AgentOutput = {
@@ -21,6 +28,13 @@ export type AgentOutput = {
   hashtags: string[];
   ctas: string[];
   recommendedTimes: string[];
+  grounding: {
+    sourceOwnerType: "tenant" | "client";
+    sourceOwnerId: string;
+    companyName: string;
+    websiteUrl: string;
+    policy: "company-profile-and-website-only";
+  };
   safety: {
     canPublishDirectly: false;
     approvalRequired: true;
@@ -43,12 +57,21 @@ export class MockPaperclipAdapter {
     }
 
     const channelLine = input.channels.join(", ") || "selected channels";
+    const groundedPrompt = buildGroundedAgentPrompt(
+      input.source,
+      input.useCase,
+      input.prompt ?? input.topic
+    );
     const body = [
-      `Draft for ${channelLine}: ${input.topic}`,
+      `${input.source.companyName} ${input.contentType} draft for ${channelLine}: ${input.topic}`,
       "",
       `Tone: ${input.tone}. Format: ${input.contentType}.`,
       input.brandVoice ? `Brand voice guardrail: ${input.brandVoice}.` : "",
-      "This is a Paperclip mock draft. Review facts, claims, compliance, and client preferences before approval."
+      `Source: ${input.source.websiteUrl}`,
+      `Company context: ${input.source.companyProfile}`,
+      `Website context: ${input.source.websiteReference}`,
+      "",
+      "This draft is grounded exclusively in the configured company profile and website reference. Review it before approval."
     ]
       .filter(Boolean)
       .join("\n");
@@ -62,6 +85,12 @@ export class MockPaperclipAdapter {
         agentType: input.agentType,
         channels: input.channels,
         contentType: input.contentType,
+        useCase: input.useCase,
+        sourcePolicy: "company-profile-and-website-only",
+        sourceOwnerType: input.source.ownerType,
+        sourceOwnerId: input.source.ownerId,
+        websiteUrl: input.source.websiteUrl,
+        groundedPrompt,
         approvalRequired: true
       }
     });
@@ -69,9 +98,19 @@ export class MockPaperclipAdapter {
     return {
       title: `${input.contentType} draft: ${input.topic}`.slice(0, 90),
       body,
-      hashtags: ["#OctaveCRM", "#DigitalMarketing", "#CampaignOps"],
-      ctas: ["Book a demo", "Reply for the media kit", "Save this post"],
+      hashtags: [
+        `#${input.source.companyName.replace(/[^a-zA-Z0-9]/g, "")}`,
+        "#CompanyUpdate"
+      ],
+      ctas: [`Learn more at ${input.source.websiteUrl}`],
       recommendedTimes: ["10:30 AM", "3:00 PM", "7:30 PM"],
+      grounding: {
+        sourceOwnerType: input.source.ownerType,
+        sourceOwnerId: input.source.ownerId,
+        companyName: input.source.companyName,
+        websiteUrl: input.source.websiteUrl,
+        policy: "company-profile-and-website-only"
+      },
       safety: {
         canPublishDirectly: false,
         approvalRequired: true

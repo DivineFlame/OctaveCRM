@@ -18,6 +18,18 @@ async function main() {
   });
 
   if (existingTenant?._count.campaigns && existingTenant._count.memberships) {
+    await prisma.tenant.update({
+      where: { id: existingTenant.id },
+      data: {
+        companyProfile:
+          existingTenant.companyProfile ??
+          "Octave Digital Studio is a digital marketing agency helping Indian MSMEs plan campaigns, create approved content, and manage customer engagement.",
+        websiteUrl: existingTenant.websiteUrl ?? "https://octavecrm.example",
+        websiteReference:
+          existingTenant.websiteReference ??
+          "OctaveCRM provides campaign planning, approval workflows, content operations, inbox management, and channel analytics for agencies and MSMEs."
+      }
+    });
     console.log(`Seed skipped; tenant ${existingTenant.name} already has demo data.`);
     return;
   }
@@ -31,6 +43,9 @@ async function main() {
       name: "Octave Digital Studio",
       slug: "demo-agency",
       plan: "growth",
+      companyProfile: "Octave Digital Studio is a digital marketing agency helping Indian MSMEs plan campaigns, create approved content, and manage customer engagement.",
+      websiteUrl: "https://octavecrm.example",
+      websiteReference: "OctaveCRM provides campaign planning, approval workflows, content operations, inbox management, and channel analytics for agencies and MSMEs.",
       settings: {
         timezone: "Asia/Kolkata",
         approvalRequired: true,
@@ -87,6 +102,9 @@ async function main() {
       phone: "+91 98765 43210",
       industry: "FMCG",
       notes: "Launching a premium millet snack range across India.",
+      companyProfile: "Northstar Foods Pvt Ltd is an Indian FMCG company launching premium, clean-label millet snacks for modern retail and health-conscious consumers.",
+      websiteUrl: "https://northstar.example",
+      websiteReference: "The Northstar product range focuses on millet-based snacks, modern retail distribution, transparent product information, and Indian consumer markets.",
       connectedSocialAccounts: ["instagram:northstarfoods", "facebook:northstarfoods"]
     }
   });

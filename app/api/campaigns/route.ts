@@ -17,6 +17,7 @@ export async function POST(request: Request) {
   const campaign = await prisma.campaign.create({
     data: {
       tenantId,
+      clientId: body.clientId,
       name: body.name,
       objective: body.objective ?? "Awareness",
       targetAudience: body.targetAudience ?? "Target audience",

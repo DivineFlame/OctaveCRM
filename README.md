@@ -17,6 +17,7 @@ OctaveCRM is a production-oriented SaaS scaffold for digital media marketing man
 - Tenant-owned models include `tenantId`.
 - API reads and writes resolve tenant context before querying.
 - AI agents only generate drafts, suggestions, summaries, and recommendations.
+- Lead, campaign, email, and content generation is grounded exclusively in the configured company profile and website reference. Client campaigns use the selected client's source data.
 - Publishing verifies content status is `APPROVED` or `SCHEDULED`.
 - Email/social sends use approved publishing paths only.
 - Audit logs are written for AI generation, approvals, integrations, scheduling, and publishing.
@@ -99,6 +100,8 @@ The app container also runs those two commands automatically on startup. The see
 ## Adapter Boundaries
 
 `lib/adapters/paperclip.ts` is the Paperclip AI adapter. Replace mock calls with real Paperclip API calls there.
+
+Before using AI generation, configure the workspace company profile, website URL, and verified website reference in Settings. Client-backed campaigns require the same three fields on the client record. Generation fails closed when its authoritative source is incomplete.
 
 `lib/adapters/composio.ts` is the Composio integration adapter. Replace mock calls with real Composio SDK/actions there. Keep the approval checks in service code; external writes must not bypass them.
 
